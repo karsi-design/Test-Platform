@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Sixth Sense Securities — Candidate Login</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+
+<header><div class="logo">SIXTH SENSE <span>SECURITIES</span></div></header>
+
+<div class="card-wrap">
+  <div class="card">
+    <div class="card-logo">
+      <div class="brand">SIXTH SENSE <span>SECURITIES</span></div>
+      <div class="sub">Candidate Assessment Portal</div>
+    </div>
+    <h2>Candidate Login</h2>
+    <p>Please fill in your details. Your mobile number must be pre-registered to proceed.</p>
+
+    <div class="field">
+      <label>Full Name</label>
+      <input type="text" id="inp-name" placeholder="Enter your full name" autocomplete="name" maxlength="80">
+      <div class="field-error" id="err-name">Please enter your full name.</div>
+    </div>
+
+    <div class="field">
+      <label>Mobile Number</label>
+      <div class="phone-row">
+        <input type="tel" id="inp-phone" placeholder="10-digit mobile number" maxlength="10" pattern="[0-9]{10}" inputmode="numeric">
+        <button class="verify-btn" id="btn-verify">Verify</button>
+      </div>
+      <div class="field-error" id="err-phone">Enter a valid 10-digit number.</div>
+      <div class="verified-badge" id="verified-badge">✅ Number verified</div>
+    </div>
+
+    <div class="field">
+      <label>Email Address</label>
+      <input type="email" id="inp-email" placeholder="you@example.com" autocomplete="email" maxlength="100" inputmode="email">
+      <div class="field-error" id="err-email">Enter a valid email address.</div>
+    </div>
+
+    <button class="btn-primary gold" id="btn-proceed" disabled>Proceed to Test →</button>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script src="assets/api.js"></script>
+<script>
+// ═══════════════════════════════════════════════════════
+//  Which page each ID routes to. Edit this if you add tracks.
+// ═══════════════════════════════════════════════════════
+const ID_ROUTES = {
+  '01': 'psychology.html',
+  '02': 'sales-aptitude.html',
+  '03': 'commodity-aptitude.html',
+};
+
+let phoneVerified = false;
+let assignedId = null;
+
+function showErr(id, msg) {
+  const el = document.getElementById(id);
+  el.textContent = msg;
+  el.classList.add('show');
+}
+function clearErr(id) { document.getElementById(id).classList.remove('show'); }
+
+function checkProceedReady() {
+  const ready = phoneVerified &&
+    document.getElementById('inp-name').value.trim().length > 1 &&
+    /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(document.getElementById('inp-email').value.trim());
+  document.getElementById('btn-proceed').disabled = !ready;
+}
+
+document.getElementById('inp-name').addEventListener('input', checkProceedReady);
+document.getElementById('inp-email').addEventListener('input', checkProceedReady);
+document.getElementById('inp-phone').addEventListener('keypress', e => {
+  if (!/[0-9]/.test(e.key)) e.preventDefault();
+});
+
+document.getElementById('btn-verify').addEventListener('click', async () => {
+  const ph = document.getElementById('inp-phone').value.trim();
+  clearErr('err-phone');
+
+  if (!/^\d{10}$/.test(ph)) {
+    showErr('err-phone', 'Enter a valid 10-digit number.');
+    return;
+  }
+
+  const btn = document.getElementById('btn-verify');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Checking…';
+
+  try {
+    const data = await Api.get({ action: 'verify', phone: ph });
+
+    if (data.status === 'allowed') {
+      phoneVerified = true;
+      assignedId = data.id;
+      document.getElementById('verified-badge').classList.add('show');
+      document.getElementById('inp-phone').readOnly = true;
+      btn.style.display = 'none';
+      checkProceedReady();
+    } else if (data.status === 'already_verified') {
+      showErr('err-phone', '⚠ This number was already verified. Each number can only be verified once. Please contact HR if this is an error.');
+      btn.disabled = false; btn.textContent = 'Verify';
+    } else if (data.status === 'used') {
+      showErr('err-phone', '⚠ This number has already completed its test.');
+      btn.disabled = false; btn.textContent = 'Verify';
+    } else if (data.status === 'not_found') {
+      showErr('err-phone', '❌ This number is not registered. Please contact HR.');
+      btn.disabled = false; btn.textContent = 'Verify';
+    } else {
+      throw new Error('Unexpected response');
+    }
+  } catch (e) {
+    console.error(e);
+    showErr('err-phone', '⚠ Network error — cannot reach server. Check internet and try again.');
+    btn.disabled = false; btn.textContent = 'Verify';
+  }
+});
+
+document.getElementById('btn-proceed').addEventListener('click', () => {
+  const name = document.getElementById('inp-name').value.trim();
+  const phone = document.getElementById('inp-phone').value.trim();
+  const email = document.getElementById('inp-email').value.trim();
+
+  const route = ID_ROUTES[assignedId];
+  if (!route) {
+    showErr('err-phone', '⚠ No test is configured for this candidate ID. Please contact HR.');
+    return;
+  }
+
+  Candidate.save({ name, phone, email, id: assignedId });
+  window.location.href = route;
+});
+</script>
+</body>
+</html>

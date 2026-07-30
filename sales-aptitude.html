@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Sixth Sense Securities — Aptitude Test</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header><div class="logo">SIXTH SENSE <span>SECURITIES</span></div></header>
+<div id="warning-banner">⚠ This window is being monitored — do not switch tabs or minimize</div>
+<div id="engine-root"></div>
+<div id="toast"></div>
+
+<script src="assets/api.js"></script>
+<script src="questions/aptitude.js"></script>
+<script src="assets/engine.js"></script>
+<script>
+TestEngine.init({
+  testType: 'aptitude',
+  testLabel: 'Aptitude Test (Sales Track)',
+  questions: APTITUDE_QUESTIONS,
+  durationSeconds: 40 * 60,
+  questionsToAsk: null, // uses the full bank — set a number to draw a random subset instead
+  requiresAptitudeCheck: false,
+  isAptitudeTest: true,
+  passThreshold: 50,
+  onPassRedirect: 'sales.html',
+});
+</script>
+</body>
+</html>
