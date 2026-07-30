@@ -3,7 +3,7 @@
 //  Script Web App. Set this URL once after you deploy the
 //  script (see /appscript/Code.gs).
 // ═══════════════════════════════════════════════════════
-const APPS_SCRIPT_URL = 'PASTE_YOUR_DEPLOYED_APPS_SCRIPT_URL_HERE';
+const APPS_SCRIPT_URL = 'https://script.google.com/macros/s/AKfycbwUYPzqubjjQ2043plqk4j3-tSqkuWDvQtwGGSP4Uk7DsWJWBLM4x0I7wOrA3o1T6Ew/exec';
 
 const Api = {
   async get(params) {
