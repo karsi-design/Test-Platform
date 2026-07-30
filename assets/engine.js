@@ -36,7 +36,7 @@ const TestEngine = (() => {
       const order = shuffleArray(q.options.map((_, i) => i));
       const newOptions = order.map(i => q.options[i]);
       const newCorrect = order.indexOf(q.correct);
-      return { text: q.text, options: newOptions, correct: newCorrect };
+      return { text: q.text, image: q.image || null, options: newOptions, correct: newCorrect };
     });
   }
 
@@ -234,6 +234,7 @@ const TestEngine = (() => {
       <div class="q-card">
         <div class="q-meta">Question ${idx + 1} of ${total} · MCQ</div>
         <div class="q-text">${idx + 1}. ${q.text}</div>
+        ${q.image ? `<img src="${q.image}" alt="Reference chart" class="q-chart-img">` : ''}
         <div class="options">
           ${q.options.map((opt, j) => `
             <label class="option-label">
