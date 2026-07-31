@@ -58,6 +58,7 @@ const ID_ROUTES = {
   '03': 'commodity-aptitude.html',
   '04': 'accounts.html',
 };
+const ADMIN_ID = '00';
 
 let phoneVerified = false;
 let assignedId = null;
@@ -124,10 +125,32 @@ document.getElementById('btn-verify').addEventListener('click', async () => {
   }
 });
 
-document.getElementById('btn-proceed').addEventListener('click', () => {
+document.getElementById('btn-proceed').addEventListener('click', async () => {
   const name = document.getElementById('inp-name').value.trim();
   const phone = document.getElementById('inp-phone').value.trim();
   const email = document.getElementById('inp-email').value.trim();
+
+  if (assignedId === ADMIN_ID) {
+    const btn = document.getElementById('btn-proceed');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span>Checking…';
+    try {
+      const data = await Api.get({ action: 'adminLogin', phone, email });
+      if (data.status === 'ok') {
+        Candidate.save({ name, phone, email, id: ADMIN_ID });
+        window.location.href = 'admin.html';
+      } else {
+        showErr('err-email', '⚠ Email does not match our admin records for this number.');
+        btn.disabled = false;
+        btn.textContent = 'Proceed to Test →';
+      }
+    } catch (e) {
+      showErr('err-email', '⚠ Network error — could not verify admin login.');
+      btn.disabled = false;
+      btn.textContent = 'Proceed to Test →';
+    }
+    return;
+  }
 
   const route = ID_ROUTES[assignedId];
   if (!route) {
