@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Sixth Sense Securities — Accounts & Taxation Test</title>
+<link rel="stylesheet" href="assets/style.css">
+</head>
+<body>
+<header><div class="logo">SIXTH SENSE <span>SECURITIES</span></div></header>
+<div id="warning-banner">⚠ This window is being monitored — do not switch tabs or minimize</div>
+<div id="engine-root"></div>
+<div id="toast"></div>
+
+<script src="assets/api.js"></script>
+<script src="questions/accounts.js"></script>
+<script src="assets/engine.js"></script>
+<script>
+TestEngine.init({
+  testType: 'accounts',
+  testLabel: 'Accounts & Taxation Executive Test',
+  questions: ACCOUNTS_QUESTIONS,
+  durationSeconds: 30 * 60,
+  questionsToAsk: null,
+  requiresAptitudeCheck: false,
+  isAptitudeTest: false,
+});
+</script>
+</body>
+</html>
