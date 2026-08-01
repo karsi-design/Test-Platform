@@ -66,7 +66,7 @@ function renderDashboard() {
           <h1>Admin Dashboard</h1>
           <p class="muted">Logged in as ${ADMIN_IDENTITY.email}</p>
         </div>
-        <button class="btn-primary secondary" id="btn-logout" style="margin-top:0;width:auto;padding:10px 18px;">Log out</button>
+        <button class="btn-ghost" id="btn-logout">Log out</button>
       </div>
 
       <h2 class="section-title">Track Summary</h2>
@@ -141,22 +141,47 @@ function renderFunnel() {
     const mainTestType = TRACK_MAIN_TEST[id];
     const completed = ALL_RESULTS.filter(r => r.testType === mainTestType).length;
 
-    let aptitudeLine = '';
+    let aptitudeBlock = '';
     if (TRACKS_WITH_APTITUDE_GATE.includes(id)) {
       const passed = trackCandidates.filter(c => c.aptitudePassed === 'TRUE').length;
       const failed = trackCandidates.filter(c => c.aptitudePassed === 'FALSE').length;
-      aptitudeLine = `<div class="funnel-row"><span>Passed aptitude</span><strong>${passed}</strong></div>
-                      <div class="funnel-row"><span>Failed aptitude</span><strong>${failed}</strong></div>`;
+      const pending = total - passed - failed;
+      const pct = n => total > 0 ? (n / total) * 100 : 0;
+
+      aptitudeBlock = `
+        <div class="funnel-bar">
+          ${passed  ? `<div class="funnel-bar-seg passed"  style="width:${pct(passed)}%"></div>`  : ''}
+          ${failed  ? `<div class="funnel-bar-seg failed"  style="width:${pct(failed)}%"></div>`  : ''}
+          ${pending ? `<div class="funnel-bar-seg pending" style="width:${pct(pending)}%"></div>` : ''}
+        </div>
+        <div class="funnel-legend">
+          <span><span class="funnel-dot" style="background:var(--green)"></span>Passed ${passed}</span>
+          <span><span class="funnel-dot" style="background:var(--red)"></span>Failed ${failed}</span>
+          <span><span class="funnel-dot" style="background:#d7dce6"></span>Pending ${pending}</span>
+        </div>`;
     }
 
     return `
-      <div class="funnel-card">
-        <div class="funnel-title">${id} — ${label}</div>
-        <div class="funnel-row"><span>Candidates</span><strong>${total}</strong></div>
-        ${aptitudeLine}
-        <div class="funnel-row"><span>Completed main test</span><strong>${completed}</strong></div>
+      <div class="funnel-card track-${id}">
+        <div class="funnel-title">${label}</div>
+        <div class="funnel-count">${total}</div>
+        <div class="funnel-count-label">candidates on this track</div>
+        ${aptitudeBlock}
+        <div class="funnel-footer"><span>Completed main test</span><strong>${completed}</strong></div>
       </div>`;
   }).join('');
+}
+function statusBadge(status) {
+  const s = (status || '').toLowerCase();
+  if (s === 'used') return `<span class="badge badge-neutral">Completed</span>`;
+  if (s === 'verified') return `<span class="badge badge-pass">In progress</span>`;
+  return `<span class="badge badge-neutral">Not started</span>`;
+}
+
+function aptitudeBadge(val) {
+  if (val === 'TRUE') return `<span class="badge badge-pass">Passed</span>`;
+  if (val === 'FALSE') return `<span class="badge badge-fail">Failed</span>`;
+  return `<span class="badge badge-neutral">—</span>`;
 }
 
 function renderCandidatesTable() {
@@ -170,16 +195,16 @@ function renderCandidatesTable() {
   const table = el('candidates-table');
   table.innerHTML = `
     <thead><tr>
-      <th>Phone</th><th>Track</th><th>Status</th><th>Aptitude Score</th><th>Aptitude Passed</th><th>Email</th>
+      <th>Phone</th><th>Track</th><th>Status</th><th>Aptitude Score</th><th>Aptitude Result</th><th>Email</th>
     </tr></thead>
     <tbody>
       ${rows.map(c => `
         <tr>
-          <td>${c.phone}</td>
-          <td>${c.id} — ${TRACK_LABELS[c.id] || 'Unknown'}</td>
-          <td>${c.status || '—'}</td>
-          <td>${c.aptitudeScore !== '' && c.aptitudeScore != null ? c.aptitudeScore : '—'}</td>
-          <td>${c.aptitudePassed || '—'}</td>
+          <td class="mono">${c.phone}</td>
+          <td><span class="funnel-dot" style="background:var(--track-${c.id})"></span> ${TRACK_LABELS[c.id] || 'Unknown'}</td>
+          <td>${statusBadge(c.status)}</td>
+          <td class="num">${c.aptitudeScore !== '' && c.aptitudeScore != null ? c.aptitudeScore + '%' : '—'}</td>
+          <td>${aptitudeBadge(c.aptitudePassed)}</td>
           <td>${c.email || '—'}</td>
         </tr>`).join('') || '<tr><td colspan="6" class="muted">No candidates match this filter.</td></tr>'}
     </tbody>`;
@@ -204,21 +229,29 @@ function renderResultsTable() {
       <th>Submitted</th><th>Phone</th><th>Name</th><th>Email</th><th>Test</th><th>Score</th><th>%</th><th>Time</th><th>Violations</th><th>Flag</th><th>Reason</th>
     </tr></thead>
     <tbody>
-      ${rows.map(r => `
-        <tr class="${r.flagStatus.includes('FLAGGED') ? 'row-flagged' : ''}">
+      ${rows.map(r => {
+        const isFlagged = r.flagStatus.includes('FLAGGED');
+        return `
+        <tr class="${isFlagged ? 'row-flagged' : ''}">
           <td>${new Date(r.timestamp).toLocaleString()}</td>
-          <td>${r.phone}</td>
+          <td class="mono">${r.phone}</td>
           <td>${r.name}</td>
           <td>${r.email}</td>
-          <td>${r.testType}</td>
-          <td>${r.score}/${r.total}</td>
-          <td>${r.percent}%</td>
-          <td>${r.timeTaken}</td>
-          <td>${r.violations}</td>
-          <td>${r.flagStatus}</td>
+          <td><span class="funnel-dot" style="background:var(--track-${trackIdForTestType(r.testType)})"></span> ${r.testType}</td>
+          <td class="num">${r.score}/${r.total}</td>
+          <td class="num">${r.percent}%</td>
+          <td class="mono">${r.timeTaken}</td>
+          <td class="num">${r.violations}</td>
+          <td>${isFlagged ? '<span class="badge badge-flag">Flagged</span>' : '<span class="badge badge-clean">Clean</span>'}</td>
           <td>${r.reason}</td>
-        </tr>`).join('') || '<tr><td colspan="11" class="muted">No results match this filter.</td></tr>'}
+        </tr>`;
+      }).join('') || '<tr><td colspan="11" class="muted">No results match this filter.</td></tr>'}
     </tbody>`;
+}
+
+function trackIdForTestType(testType) {
+  const entry = Object.entries(TRACK_MAIN_TEST).find(([, v]) => v === testType);
+  return entry ? entry[0] : '01';
 }
 
 init();

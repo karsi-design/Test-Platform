@@ -147,7 +147,7 @@ document.getElementById('btn-proceed').addEventListener('click', async () => {
     } catch (e) {
       showErr('err-email', '⚠ Network error — could not verify admin login.');
       btn.disabled = false;
-      btn.textContent = 'Proceed to Test →';
+      btn.textContent = 'Proceed →';
     }
     return;
   }
