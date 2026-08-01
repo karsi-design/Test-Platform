@@ -142,7 +142,7 @@ document.getElementById('btn-proceed').addEventListener('click', async () => {
       } else {
         showErr('err-email', '⚠ Email does not match our admin records for this number.');
         btn.disabled = false;
-        btn.textContent = 'Proceed to Test →';
+        btn.textContent = 'Proceed →';
       }
     } catch (e) {
       showErr('err-email', '⚠ Network error — could not verify admin login.');
