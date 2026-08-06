@@ -8,17 +8,17 @@ const TRACK_LABELS = {
   '02': 'Sales',
   '03': 'Commodity',
   '04': 'Accounts',
+  '05': 'Commodity (NISM 8+16)',
 };
 
-// Which "main test" TestType value corresponds to each track,
-// so the funnel summary can count completions correctly.
 const TRACK_MAIN_TEST = {
   '01': 'psychology',
   '02': 'sales',
   '03': 'commodity',
   '04': 'accounts',
+  '05': 'commodity2',
 };
-const TRACKS_WITH_APTITUDE_GATE = ['02', '03'];
+const TRACKS_WITH_APTITUDE_GATE = ['02', '03', '05'];
 
 let ALL_CANDIDATES = [];
 let ALL_RESULTS = [];
